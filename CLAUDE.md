@@ -139,6 +139,19 @@ Concluído (adicional):
 - [x] `data/resultado_llm_precomputado.rds`, versionado via exceção no
       `.gitignore`
 - [x] Push para `github.com/andersonheri/sicss-brazil-2026-text`
+- [x] `scripts/06_atividade.R`: script-modelo com exemplos reais do `acR`
+      (assinaturas conferidas contra o pacote instalado, não de memória) para
+      os alunos levarem e adaptarem ao próprio corpus. Rodado com sucesso
+      sobre o corpus de exemplo.
+- [x] `data/corpus_atividade.csv`: corpus de exemplo fictício (16 falas de um
+      plenário municipal fictício sobre uma reforma de praça), só para o
+      script rodar de fábrica; alunos trocam pelo próprio corpus
+- [x] Exercício da tarde redesenhado para formato individual e online: sem
+      troca de codebook entre colegas, confiabilidade testada por
+      dupla-codificação interna (o próprio aluno codifica os mesmos 5
+      documentos duas vezes, cego entre as rodadas). `aula02_tarde.tex`
+      atualizado (seção Atividade e as duas referências cruzadas antes
+      dela), recompilado sem erro.
 
 Pendente:
 
@@ -146,15 +159,19 @@ Pendente:
 - [ ] `scripts/01_corpus.R`: coleta e construção do corpus
 - [ ] `scripts/02_quantitativo.R`: limpeza, contagem, keyness e LDA
 - [ ] `scripts/04_validacao.R`: amostragem, `ac_qual_irr` e métricas
-- [ ] `scripts/06_atividade.R`: material da oficina da tarde (exercício em
-      redesenho, ver seção "Atividade da tarde" abaixo)
-- [ ] `data/corpus_atividade.csv`: corpus da atividade (depende do redesenho)
 - [ ] `renv.lock`
+- [ ] Arquivo com a explicação formal da tarefa da tarde (autor decidiu
+      adiar; formato da atividade já está fechado, falta só documentá-lo à
+      parte dos slides)
 
-Os slides **ainda citam** `scripts/06_atividade.R` e `data/corpus_atividade.csv`,
-que não existem. Como o exercício da tarde está sendo redesenhado (oficina
-online, sem troca de codebook entre grupos), esses dois itens ficam pendentes
-até o novo formato ser definido.
+Achado durante a checagem contra o pacote `acR` instalado localmente: os
+blocos "Demo 3" e "Demo 4" de `aula01_manha.tex` (por volta das linhas
+761-793 e 849) chamam `ac_count()`, `ac_keyness()` e `ac_lda()` passando o
+resultado de `ac_tokenize()` onde a assinatura real espera o objeto
+`ac_corpus`, e `ac_keyness()` usa um argumento `ref` que não existe na
+função real (o parâmetro certo é `group`, com `target` apontando para um dos
+dois valores da coluna de grupo). Ainda não corrigido nos slides; ver
+`scripts/06_atividade.R` para o uso correto dessas três funções.
 
 ## Restrição de execução no dia
 

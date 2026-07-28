@@ -16,6 +16,7 @@
 .RData
 .Ruserdata
 .Rproj.user/
+Rplots.pdf
 
 # --- Segredos: NUNCA versionar ------------------------------------------------
 .Renviron
