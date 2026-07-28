@@ -68,16 +68,31 @@ pacote de idioma `texlive-lang-portuguese`, necessário para
 
 ## Pacotes de R
 
+O projeto usa `renv`. Para reproduzir o ambiente exato (versões travadas em
+`renv.lock`):
+
+```r
+install.packages("renv")
+renv::restore()
+```
+
+`renv::restore()` reinstala os pacotes do CRAN nas versões do `renv.lock`.
+O `acR` não entra nesse lockfile (é instalado do GitHub, ainda em submissão
+à CRAN) e precisa ser instalado à parte:
+
+```r
+remotes::install_github("andersonheri/acR")
+```
+
+Sem `renv`, a lista equivalente para instalar manualmente é a que
+`scripts/00_setup.R` confere e instala:
+
 ```r
 install.packages(c("tidyverse", "quanteda", "quanteda.textstats",
-                   "quanteda.textmodels", "tidytext", "stm",
-                   "irr", "irrCAC", "here", "remotes"))
+                   "quanteda.textmodels", "tidytext", "topicmodels",
+                   "irr", "irrCAC", "here", "remotes", "ellmer", "renv"))
 
-# acR em submissão à CRAN; instalar do GitHub
 remotes::install_github("andersonheri/acR")
-
-# Módulo qualitativo (LLM)
-install.packages("ellmer")
 ```
 
 Chaves de API vão no `.Renviron`, nunca no código:
