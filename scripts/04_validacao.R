@@ -158,16 +158,59 @@ confiabilidade <- ac_qual_reliability(
 print(confiabilidade)
 
 # =============================================================================
-# 3. EXPORTAR
+# 3. MÉTRICAS POR CATEGORIA (precisão, revocação, F1, kappa one-vs-rest)
+# -----------------------------------------------------------------------------
+# ac_qual_irr()/ac_qual_reliability() só dão métricas agregadas. O slide
+# "Por que o número agregado engana" (aula02_tarde.tex) mostra uma quebra por
+# categoria; não existe função do acR para isso, então é calculado aqui na
+# mão, com as fórmulas padrão (precisão/revocação/F1 a partir da matriz de
+# confusão; kappa one-vs-rest tratando cada categoria como um problema
+# binário "é esta categoria" vs. "é outra").
+# =============================================================================
+
+categorias <- c("punitivista", "preventivo", "garantista", "nao_aplicavel")
+
+metrica_categoria <- function(cat) {
+  llm_bin    <- factor(doc_a_doc$llm    == cat, levels = c(TRUE, FALSE))
+  humano_bin <- factor(doc_a_doc$humano == cat, levels = c(TRUE, FALSE))
+  tab <- table(llm = llm_bin, humano = humano_bin)
+
+  TP <- tab["TRUE", "TRUE"];  FP <- tab["TRUE", "FALSE"]
+  FN <- tab["FALSE", "TRUE"]; TN <- tab["FALSE", "FALSE"]
+  n_total <- TP + FP + FN + TN
+
+  precisao  <- TP / (TP + FP)
+  revocacao <- TP / (TP + FN)
+  f1        <- 2 * precisao * revocacao / (precisao + revocacao)
+
+  po <- (TP + TN) / n_total
+  pe <- ((TP + FP) / n_total) * ((TP + FN) / n_total) +
+        ((FN + TN) / n_total) * ((FP + TN) / n_total)
+  kappa <- (po - pe) / (1 - pe)
+
+  tibble(
+    categoria = cat, n = as.integer(TP + FP),
+    precisao = round(precisao, 3), revocacao = round(revocacao, 3),
+    F1 = round(f1, 3), kappa_cat = round(kappa, 3)
+  )
+}
+
+metricas_por_categoria <- bind_rows(lapply(categorias, metrica_categoria))
+print(metricas_por_categoria)
+
+# =============================================================================
+# 4. EXPORTAR
 # =============================================================================
 
 dir.create(p_outputs(), showWarnings = FALSE, recursive = TRUE)
 ac_export(irr, p_outputs("irr.csv"))
 ac_export(confiabilidade, p_outputs("reliability.csv"))
+ac_export(metricas_por_categoria, p_outputs("metricas_por_categoria.csv"))
 
 message("Concluido. Tabelas salvas em ", p_outputs())
 message(
-  "Compare estes numeros reais com o slide \"Amostragem e metricas em quatro ",
-  "linhas\" (aula02_tarde.tex): se divergirem, o slide deve ser atualizado ",
-  "para bater com esta saida, nao o contrario."
+  "Compare estes numeros reais com os slides \"Amostragem e metricas de ",
+  "confiabilidade\" e \"Por que o numero agregado engana\" ",
+  "(aula02_tarde.tex): se divergirem, o slide deve ser atualizado para ",
+  "bater com esta saida, nao o contrario."
 )

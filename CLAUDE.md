@@ -211,21 +211,21 @@ Concluído (adicional):
 - [x] `ATIVIDADE_TARDE.md`: explicação formal da tarefa da tarde para os
       alunos (formato individual, dupla-codificação interna, materiais,
       roteiro de apresentação, critério de sucesso).
-
-Observação não corrigida (fora do escopo desta rodada): o slide "Por que o
-número agregado engana" (`aula02_tarde.tex`) mostra uma tabela por categoria
-(precisão, revocação, F1, kappa_cat) cujos números não batem exatamente com
-os que se derivariam de `figuras/dados/fig4_confusao.csv` pelas fórmulas
-padrão de precisão/revocação. Não está associada a uma chamada de função
-específica (é uma saída "Rsaida" genérica), então é um número ilustrativo
-escrito à mão, como os das figuras. A direção do argumento pedagógico
-(κ agregado esconde fraqueza em "garantista") continua correta.
+- [x] Reconciliada a tabela por categoria do slide "Por que o número
+      agregado engana" com `figuras/dados/fig4_confusao.csv`. Não existe
+      função do `acR` para isso, então `scripts/04_validacao.R` calcula
+      precisão/revocação/F1/kappa one-vs-rest na mão, a partir da matriz de
+      confusão real, e exporta `outputs/metricas_por_categoria.csv`. Números
+      antigos (escritos à mão) trocados pelos reais: punitivista
+      0,918/0,862/0,889/0,809; preventivo 0,767/0,805/0,786/0,702; garantista
+      0,471/0,667/0,552/0,505; nao_aplicavel 0,966/0,875/0,918/0,897. O texto
+      abaixo da tabela também mudou: a fraqueza de "garantista" está na
+      **precisão** (0,47), não na revocação como dizia antes (o valor 0,47
+      já existia no slide antigo, só com o rótulo trocado).
 
 Pendente:
 
-- [ ] Nada crítico para o workshop de amanhã. Falta só polimento contínuo
-      (ex.: reconciliar a tabela por categoria citada acima, se um dia for
-      importante que bata dígito a dígito).
+- [ ] Nada crítico identificado para o workshop de amanhã.
 
 ## Restrição de execução no dia
 
