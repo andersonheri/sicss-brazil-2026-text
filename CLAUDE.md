@@ -32,8 +32,12 @@ Todo slide deve se conectar a isso. O eixo é **validação**, não ferramenta.
 .
 ├── Workshop_SICSS_2026.Rproj   abrir antes de rodar scripts em R
 ├── .workshop-root              sentinela usado por 05_figuras.R; NÃO apagar
+├── .Rprofile                   ativa o renv (source("renv/activate.R"))
+├── renv.lock                   versões travadas dos pacotes do CRAN
+├── renv/                       infraestrutura do renv (library/ não versionada)
 ├── CLAUDE.md                   este arquivo
 ├── README.md
+├── ATIVIDADE_TARDE.md          explicação da tarefa da tarde para os alunos
 ├── LICENSE                     MIT (código) + CC BY 4.0 (slides)
 ├── CITATION.cff
 ├── aula01_manha.tex            64 páginas de projeção (~45 slides)
@@ -41,9 +45,18 @@ Todo slide deve se conectar a isso. O eixo é **validação**, não ferramenta.
 ├── figuras/
 │   ├── fig_*.png               geradas por scripts/05_figuras.R (300 dpi)
 │   └── dados/fig*.csv          insumos ILUSTRATIVOS das figuras
-├── scripts/05_figuras.R        único script existente até agora
-├── data/                       vazia: corpus e outputs pré-computados
-└── outputs/                    vazia: tabelas, relatórios, planilhas
+├── scripts/
+│   ├── 00_setup.R              instala/confere pacotes
+│   ├── 01_corpus.R             coleta e construção do corpus
+│   ├── 02_quantitativo.R       limpeza, contagem, keyness, LDA
+│   ├── 03_llm.R                codebook e classificação por LLM (placeholder)
+│   ├── 04_validacao.R          amostragem, ac_qual_irr, ac_qual_reliability
+│   ├── 05_figuras.R            gera as figuras dos slides
+│   └── 06_atividade.R          script-modelo para os alunos levarem
+├── data/
+│   ├── corpus_atividade.csv    corpus fictício, usado pelos scripts acima
+│   └── resultado_llm_precomputado.rds  placeholder, citado nos slides
+└── outputs/                    top_termos.csv, keyness.csv, irr.csv, reliability.csv
 ```
 
 ## Convenções obrigatórias
@@ -159,17 +172,60 @@ Concluído (adicional):
       argumento `ref` inexistente em `ac_keyness()` (o certo é `group`).
       Achado ao conferir contra o pacote `acR` instalado localmente (Rd db e
       testthat), não de memória. Recompilado sem erro.
+- [x] `scripts/00_setup.R`: confere e instala os pacotes do CRAN e o `acR`
+      (GitHub). Rodado com sucesso; todos os pacotes já estavam instalados.
+- [x] `scripts/01_corpus.R`: bloco (A) real (`ac_fetch_camara`/
+      `ac_fetch_senado`, comentado) e bloco (B) ativo, que reaproveita
+      `data/corpus_atividade.csv`. Rodado com sucesso.
+- [x] `scripts/02_quantitativo.R`: limpeza, contagem, tf-idf, keyness e LDA
+      sobre o corpus de exemplo, exportando `outputs/top_termos.csv` e
+      `outputs/keyness.csv` via `ac_export()`. Rodado com sucesso.
+- [x] `scripts/04_validacao.R`: `ac_qual_sample()` real sobre
+      `data/resultado_llm_precomputado.rds`, e reconstrução documento a
+      documento da matriz de `figuras/dados/fig4_confusao.csv` para rodar
+      `ac_qual_irr()` e `ac_qual_reliability()` de verdade. Exporta
+      `outputs/irr.csv` e `outputs/reliability.csv`.
+- [x] **Achado ao escrever o script acima:** o slide "Amostragem e métricas"
+      de `aula02_tarde.tex` mostrava um único `ac_qual_irr()` devolvendo
+      Gwet's AC1 e F1 macro, métricas que só existem em
+      `ac_qual_reliability()` (função separada). Corrigido: o slide agora
+      mostra as duas chamadas, com os números reais calculados pelo script
+      (percent agreement 0,833; kappa 0,760; alpha 0,761; AC1 0,783; F1
+      macro 0,786; antes eram 0,833/0,741/0,733/0,788/0,793, escritos à mão
+      sem rodar a função). O κ citado no slide seguinte também foi
+      atualizado de 0,74 para 0,76 para bater com o novo número.
+- [x] `data/resultado_llm_precomputado.rds` corrigido: a coluna se chamava
+      `confianca`, mas a saída real de `ac_qual_code()` usa
+      `confidence_score` (conferido em `tests/testthat/test-ac_qual_code.R`
+      do pacote instalado). Com o nome errado, `ac_qual_sample(strategy =
+      "uncertainty")` caía silenciosamente para amostragem aleatória (aviso
+      "coluna não encontrada", sem erro). Corrigido; a estratégia de
+      incerteza agora funciona de verdade sobre o placeholder.
+- [x] `renv.lock` gerado com `renv::init()`. O `acR` fica com `Source:
+      unknown` no lockfile porque, neste ambiente, foi instalado como
+      pacote local do próprio autor, não via `remotes::install_github()`
+      (sem os campos `Remote*` no DESCRIPTION) — por isso continua exigindo
+      instalação manual à parte, documentada no README. Isso ativa `renv`
+      neste projeto: abrir R aqui a partir de agora carrega
+      `renv/activate.R` via `.Rprofile`.
+- [x] `ATIVIDADE_TARDE.md`: explicação formal da tarefa da tarde para os
+      alunos (formato individual, dupla-codificação interna, materiais,
+      roteiro de apresentação, critério de sucesso).
+
+Observação não corrigida (fora do escopo desta rodada): o slide "Por que o
+número agregado engana" (`aula02_tarde.tex`) mostra uma tabela por categoria
+(precisão, revocação, F1, kappa_cat) cujos números não batem exatamente com
+os que se derivariam de `figuras/dados/fig4_confusao.csv` pelas fórmulas
+padrão de precisão/revocação. Não está associada a uma chamada de função
+específica (é uma saída "Rsaida" genérica), então é um número ilustrativo
+escrito à mão, como os das figuras. A direção do argumento pedagógico
+(κ agregado esconde fraqueza em "garantista") continua correta.
 
 Pendente:
 
-- [ ] `scripts/00_setup.R`: instalação e verificação de pacotes
-- [ ] `scripts/01_corpus.R`: coleta e construção do corpus
-- [ ] `scripts/02_quantitativo.R`: limpeza, contagem, keyness e LDA
-- [ ] `scripts/04_validacao.R`: amostragem, `ac_qual_irr` e métricas
-- [ ] `renv.lock`
-- [ ] Arquivo com a explicação formal da tarefa da tarde (autor decidiu
-      adiar; formato da atividade já está fechado, falta só documentá-lo à
-      parte dos slides)
+- [ ] Nada crítico para o workshop de amanhã. Falta só polimento contínuo
+      (ex.: reconciliar a tabela por categoria citada acima, se um dia for
+      importante que bata dígito a dígito).
 
 ## Restrição de execução no dia
 
