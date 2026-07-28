@@ -1,0 +1,5 @@
+"metric","estimate","ci_lower","ci_upper","interpretation"
+"percent_agreement",0.833333333333333,0.773333333333333,0.886666666666667,"boa (>= 80%)"
+"krippendorff_alpha",0.760822960995744,0.672198561020793,0.843473276223158,"substancial (Landis & Koch, 1977)"
+"gwet_ac1",0.783126259072552,0.704591988694482,0.860704222153245,"substancial (Landis & Koch, 1977)"
+"f1_macro",0.786090024854864,0.703363454707902,0.862791884444151,"substancial (Landis & Koch, 1977)"

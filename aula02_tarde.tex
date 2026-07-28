@@ -327,25 +327,22 @@ acerto. É consistência. Modelos podem ser consistentemente errados.
 \end{frame}
 
 % --- SLIDE 7/10 ---------------------------------------------------------------
-\begin{frame}[fragile]{Amostragem e métricas em quatro linhas}
+\begin{frame}[fragile]{Amostragem e métricas de confiabilidade}
 \begin{lstlisting}
-# Amostra por incerteza: prioriza onde o modelo hesitou
+# Amostra por incerteza, planilha sem rotulo, revisao humana
 amostra <- ac_qual_sample(resultado, n = 150, strategy = "uncertainty")
-
-# Planilha para os codificadores, SEM o rotulo do modelo (evita ancoragem)
 ac_qual_export_for_review(amostra, "outputs/revisao.xlsx", corpus_limpo)
 humano <- ac_qual_import_human("outputs/revisao_preenchida.xlsx")
 
-irr <- ac_qual_irr(gold = humano, predicted = resultado,
-                   id_col = "doc_id", cat_col = "categoria")
+# Kappa/alpha vem de ac_qual_irr(); AC1/F1 exigem ac_qual_reliability()
+irr     <- ac_qual_irr(gold = humano, predicted = resultado,
+                       id_col = "doc_id", cat_col = "categoria")
+confiab <- ac_qual_reliability(llm = resultado, human = humano)
 \end{lstlisting}
 \begin{lstlisting}[style=Rsaida]
-<ac_qual_irr>  n = 150 | 2 codificadores (humano vs. LLM)
-  Percent agreement      0.833   [0.771 , 0.888]
-  Cohen's kappa          0.741   [0.652 , 0.821]
-  Krippendorff's alpha   0.733   [0.641 , 0.815]
-  Gwet's AC1             0.788   [0.712 , 0.856]
-  F1 macro               0.793   [0.702 , 0.869]
+n = 150 | Percent agreement 0.833 | Cohen's kappa 0.760 [0.66, 0.86]
+ac_qual_reliability (bootstrap, n=1000): alpha 0.761 [0.67, 0.84]
+  Gwet's AC1 0.783 [0.71, 0.86]  |  F1 macro 0.786 [0.70, 0.86]
 \end{lstlisting}
 \end{frame}
 
@@ -361,7 +358,7 @@ irr <- ac_qual_irr(gold = humano, predicted = resultado,
 \vspace{0.25cm}
 \begin{alertblock}{O que este quadro autoriza, e o que ele proíbe}
 \small
-$\kappa = 0{,}74$ é publicável. Mas ``garantista'' tem revocação de 0,47: o
+$\kappa = 0{,}76$ é publicável. Mas ``garantista'' tem revocação de 0,47: o
 modelo perde metade dos casos.\\[0.12cm]
 \textbf{Conclusão honesta:} o pipeline sustenta análise sobre punitivismo e
 prevenção. Não sustenta afirmação alguma sobre a trajetória do discurso

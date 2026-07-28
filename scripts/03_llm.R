@@ -20,7 +20,11 @@
 # já impressos no slide de aula02_tarde.tex (118/84/27/71 documentos por
 # categoria; conf_media e k_unanime por categoria). Não é uma classificação
 # real, é um placeholder estrutural para que o slide e a atividade da tarde
-# funcionem sem chamada de API no dia do workshop.
+# funcionem sem chamada de API no dia do workshop. As colunas doc_id,
+# categoria, confidence_score e confidence_level usam os mesmos nomes do
+# output real de ac_qual_code() (conferido contra o pacote acR instalado),
+# para que scripts/04_validacao.R funcione sobre este placeholder do mesmo
+# jeito que funcionaria sobre um resultado real.
 #
 # Quando houver corpus e codebook reais, o bloco (A) mostra o pipeline
 # verdadeiro a ser usado no lugar do bloco (B), no mesmo padrão de
@@ -155,36 +159,52 @@ metas <- tribble(
 #                           confidence    = "total")
 
 # (B) Versão ilustrativa: um resultado por documento (300 no total) cuja
-# agregação por categoria bate exatamente com as metas acima. `confianca` é
-# a confiança total por documento (0 a 1); `k_unanime` indica se as 3
-# passagens do modelo concordaram (k_consistency = 3L).
+# agregação por categoria bate exatamente com as metas acima. As colunas
+# seguem o nome real do output de ac_qual_code() (doc_id, categoria,
+# confidence_score, confidence_level), para que funções que dependem desses
+# nomes (ac_qual_sample(strategy = "uncertainty"), por exemplo) funcionem de
+# verdade sobre este placeholder. `k_unanime` é um campo extra, só deste
+# script (NÃO é uma coluna real de ac_qual_code()): guarda se as 3 passagens
+# de self-consistency teriam concordado, para reproduzir o resumo por
+# categoria do slide.
 simular_categoria <- function(categoria, n, conf_media, k_unanime, dp = 0.05) {
 
-  # Confiança por documento: gera n-1 valores em torno da meta e resolve o
-  # último analiticamente, para que a média da categoria bata exatamente com
-  # conf_media (evita ficar reamostrando até acertar por sorte).
+  # confidence_score por documento: gera n-1 valores em torno da meta e
+  # resolve o último analiticamente, para que a média da categoria bata
+  # exatamente com conf_media (evita ficar reamostrando até acertar por
+  # sorte).
   base <- rnorm(n - 1, mean = conf_media, sd = dp)
   base <- pmin(pmax(base, 0.05), 0.99)
   ultimo <- n * conf_media - sum(base)
   ultimo <- pmin(pmax(ultimo, 0.05), 0.99)
-  confianca <- c(base, ultimo)
+  confidence_score <- c(base, ultimo)
   # pequeno ajuste final para eliminar o resíduo do clipping
-  confianca <- confianca + (conf_media - mean(confianca))
-  confianca <- round(pmin(pmax(confianca, 0.05), 0.99), 2)
+  confidence_score <- confidence_score + (conf_media - mean(confidence_score))
+  confidence_score <- round(pmin(pmax(confidence_score, 0.05), 0.99), 2)
 
   # Unanimidade por documento: número exato de "sim" tal que a proporção
   # arredondada a duas casas bate com k_unanime.
   n_unanime <- round(n * k_unanime)
   unanime   <- sample(c(rep(TRUE, n_unanime), rep(FALSE, n - n_unanime)))
 
-  tibble(categoria = categoria, confianca = confianca, k_unanime = unanime)
+  tibble(
+    categoria        = categoria,
+    confidence_score = confidence_score,
+    confidence_level = cut(
+      confidence_score,
+      breaks = c(-Inf, 0.65, 0.85, Inf),
+      labels = c("baixa", "media", "alta")
+    ),
+    k_unanime        = unanime
+  )
 }
 
 resultado <- metas |>
   rowwise() |>
   reframe(simular_categoria(categoria, n, conf_media, k_unanime)) |>
   mutate(doc_id = row_number(), modelo = MODELO) |>
-  select(doc_id, categoria, confianca, k_unanime, modelo)
+  select(doc_id, categoria, confidence_score, confidence_level, k_unanime,
+         modelo)
 
 # =============================================================================
 # 4. CONFERÊNCIA (a agregação deve bater com o slide)
@@ -193,7 +213,7 @@ conferencia <- resultado |>
   group_by(categoria) |>
   summarise(
     n          = n(),
-    conf_media = round(mean(confianca), 2),
+    conf_media = round(mean(confidence_score), 2),
     k_unanime  = round(mean(k_unanime), 2),
     .groups    = "drop"
   )

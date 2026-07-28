@@ -1,0 +1,5 @@
+"metric","estimate","ci_lower","ci_upper","interpretation"
+"Percent Agreement",0.833333333333333,NA,NA,"Muito bom"
+"Cohen's Kappa (unweighted)",0.760230179028133,0.660563479795166,0.8598968782611,"Substancial"
+"Fleiss' Kappa",0.760023037788374,0.66008474692283,0.859961328653919,"Substancial"
+"Krippendorff's Alpha (nominal)",0.760822960995744,NA,NA,"Substancial"
