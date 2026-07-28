@@ -131,22 +131,30 @@ Concluído:
 - [x] Estrutura do projeto, README, LICENSE, CITATION.cff, .gitignore
 - [x] Git inicializado, branch `main`, primeiro commit feito
 
+Concluído (adicional):
+
+- [x] `scripts/03_llm.R`: gera `data/resultado_llm_precomputado.rds`
+      (placeholder ilustrativo, número por categoria bate com o slide de
+      aula02_tarde.tex; ver comentário no topo do script)
+- [x] `data/resultado_llm_precomputado.rds`, versionado via exceção no
+      `.gitignore`
+- [x] Push para `github.com/andersonheri/sicss-brazil-2026-text`
+
 Pendente:
 
 - [ ] `scripts/00_setup.R`: instalação e verificação de pacotes
 - [ ] `scripts/01_corpus.R`: coleta e construção do corpus
 - [ ] `scripts/02_quantitativo.R`: limpeza, contagem, keyness e LDA
-- [ ] `scripts/03_llm.R`: codebook e classificação, com output salvo em `data/`
 - [ ] `scripts/04_validacao.R`: amostragem, `ac_qual_irr` e métricas
-- [ ] `scripts/06_atividade.R`: material da oficina da tarde
-- [ ] `data/corpus_atividade.csv`: corpus da atividade em grupos
-- [ ] `data/resultado_llm_precomputado.rds`: citado nos slides, ainda não existe
+- [ ] `scripts/06_atividade.R`: material da oficina da tarde (exercício em
+      redesenho, ver seção "Atividade da tarde" abaixo)
+- [ ] `data/corpus_atividade.csv`: corpus da atividade (depende do redesenho)
 - [ ] `renv.lock`
-- [ ] Push para `github.com/andersonheri/sicss-brazil-2026-text`
 
-Os slides **já citam** `scripts/06_atividade.R`, `data/corpus_atividade.csv` e
-`data/resultado_llm_precomputado.rds`. Esses arquivos precisam existir antes do
-workshop, ou as referências nos slides precisam ser ajustadas.
+Os slides **ainda citam** `scripts/06_atividade.R` e `data/corpus_atividade.csv`,
+que não existem. Como o exercício da tarde está sendo redesenhado (oficina
+online, sem troca de codebook entre grupos), esses dois itens ficam pendentes
+até o novo formato ser definido.
 
 ## Restrição de execução no dia
 

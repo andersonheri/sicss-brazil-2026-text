@@ -31,6 +31,10 @@ data/*.rds
 !outputs/.gitkeep
 !data/.gitkeep
 
+# Excecao: resultado pre-computado citado nos slides da aula da tarde.
+# Precisa estar versionado para o workshop rodar sem chamada de API.
+!data/resultado_llm_precomputado.rds
+
 # --- Sistema ------------------------------------------------------------------
 .DS_Store
 Thumbs.db
