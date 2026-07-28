@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "Se você usar este material, por favor cite conforme abaixo."
+title: "Análise Automatizada de Texto: materiais do workshop SICSS-Brazil 2026"
+abstract: >-
+  Slides, scripts em R e dados de exemplo do workshop de análise automatizada
+  de texto ministrado no Summer Institute in Computational Social Science,
+  Brazil (SICSS-Brazil 2026), na Fundação Getulio Vargas, Rio de Janeiro.
+  Cobre o pipeline text-as-data da análise de conteúdo categorial clássica à
+  classificação assistida por LLM, com ênfase em validação e reprodutibilidade.
+type: software
+authors:
+  - family-names: "Henrique"
+    given-names: "Anderson"
+    email: "andersonheri@gmail.com"
+    orcid: "https://orcid.org/0000-0002-1842-2725"
+    affiliation: "Centro de Estudos da Metrópole (CEM), Universidade de São Paulo"
+date-released: "2026-07-29"
+version: "1.0.0"
+license: MIT
+keywords:
+  - análise de conteúdo
+  - text-as-data
+  - ciência política
+  - R
+  - LLM
+  - reprodutibilidade
+references:
+  - type: software
+    title: "acR: Análise de Conteúdo em R"
+    authors:
+      - family-names: "Henrique"
+        given-names: "Anderson"
+    version: "0.3.2"
+    year: 2026
+    url: "https://ahenriquecp.com/acR/"

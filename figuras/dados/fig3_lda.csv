@@ -1,0 +1,21 @@
+topico,termo,beta
+1. seguranca,seguranca,0.041
+1. seguranca,policia,0.033
+1. seguranca,violencia,0.028
+1. seguranca,crime,0.024
+1. seguranca,publica,0.019
+2. fiscal,orcamento,0.038
+2. fiscal,recursos,0.031
+2. fiscal,fiscal,0.026
+2. fiscal,emenda,0.022
+2. fiscal,despesa,0.018
+3. social,saude,0.044
+3. social,educacao,0.035
+3. social,assistencia,0.029
+3. social,familias,0.023
+3. social,criancas,0.02
+4. procedimental,presidente,0.052
+4. procedimental,votacao,0.04
+4. procedimental,requerimento,0.031
+4. procedimental,mesa,0.025
+4. procedimental,sessao,0.021

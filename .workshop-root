@@ -1,0 +1,6 @@
+Arquivo-sentinela do projeto.
+
+Serve para que scripts/05_figuras.R identifique com seguranca a raiz do projeto,
+independentemente do diretorio de trabalho. Nao apague nem mova este arquivo.
+
+Projeto: Workshop de Analise Automatizada de Texto - SICSS-Brazil 2026

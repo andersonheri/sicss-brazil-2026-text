@@ -1,0 +1,36 @@
+# --- LaTeX -------------------------------------------------------------------
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# --- R -----------------------------------------------------------------------
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+
+# --- Segredos: NUNCA versionar ------------------------------------------------
+.Renviron
+.env
+*.key
+
+# --- Saídas volumosas ---------------------------------------------------------
+outputs/*.xlsx
+outputs/*.html
+data/*.rds
+
+# Manter a estrutura de pastas vazias no repositório
+!outputs/.gitkeep
+!data/.gitkeep
+
+# --- Sistema ------------------------------------------------------------------
+.DS_Store
+Thumbs.db

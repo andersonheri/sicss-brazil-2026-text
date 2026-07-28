@@ -1,0 +1,17 @@
+llm,humano,n
+punitivista,punitivista,56
+punitivista,preventivo,3
+punitivista,garantista,1
+punitivista,nao_aplicavel,1
+preventivo,punitivista,5
+preventivo,preventivo,33
+preventivo,garantista,3
+preventivo,nao_aplicavel,2
+garantista,punitivista,4
+garantista,preventivo,4
+garantista,garantista,8
+garantista,nao_aplicavel,1
+nao_aplicavel,punitivista,0
+nao_aplicavel,preventivo,1
+nao_aplicavel,garantista,0
+nao_aplicavel,nao_aplicavel,28
