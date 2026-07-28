@@ -758,8 +758,7 @@ demais.
 \begin{columns}[T]
 \column{0.44\textwidth}
 \begin{lstlisting}
-tokens   <- ac_tokenize(corpus_limpo)
-contagem <- ac_count(tokens)
+contagem <- ac_count(corpus_limpo)
 
 ac_top_terms(contagem, n = 15) |>
   ac_plot_top_terms()
@@ -782,14 +781,15 @@ diz nada sobre variação entre grupos.
 \column{0.44\textwidth}
 \begin{lstlisting}
 # TF-IDF: o que e DISTINTIVO
-tfidf <- ac_count(tokens,
-                  by = "partido") |>
-  ac_tf_idf(by = "partido")
+freq_partido <- ac_count(corpus_limpo,
+                         by = "partido")
+tfidf <- ac_tf_idf(freq_partido,
+                   by = "partido")
 
 # Keyness: teste estatistico
-kn <- ac_keyness(tokens,
-                 target = "PT",
-                 ref    = "PL")
+kn <- ac_keyness(freq_partido,
+                 group  = "partido",
+                 target = "PT")
 ac_plot_keyness(kn)
 \end{lstlisting}
 \vspace{0.1cm}
@@ -824,7 +824,8 @@ Diante de qualquer tabela de frequência ou de \emph{keyness}:
 \begin{lstlisting}
 # KWIC: onde e como o termo aparece, no contexto original
 library(quanteda)
-kwic(tokens, pattern = "impunidade", window = 6) |> head(4)
+tokens_qt <- quanteda::tokens(corpus_limpo$text)
+kwic(tokens_qt, pattern = "impunidade", window = 6) |> head(4)
 \end{lstlisting}
 \begin{lstlisting}[style=Rsaida]
  docname       pre                        keyword       post
@@ -846,7 +847,7 @@ verificar, e evita uma conclusão falsa.
 \column{0.40\textwidth}
 \begin{lstlisting}
 # SEMPRE fixe a seed
-lda <- ac_lda(tokens,
+lda <- ac_lda(corpus_limpo,
               k = 4,
               seed = 1234)
 

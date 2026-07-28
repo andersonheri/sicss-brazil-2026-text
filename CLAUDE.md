@@ -152,6 +152,13 @@ Concluído (adicional):
       documentos duas vezes, cego entre as rodadas). `aula02_tarde.tex`
       atualizado (seção Atividade e as duas referências cruzadas antes
       dela), recompilado sem erro.
+- [x] Corrigidos os blocos "Demo 3" e "Demo 4" de `aula01_manha.tex`
+      (frequência, distintividade/keyness, KWIC e LDA), que chamavam
+      `ac_count()`/`ac_keyness()`/`ac_lda()` passando o resultado de
+      `ac_tokenize()` onde a assinatura real espera `ac_corpus`, e usavam um
+      argumento `ref` inexistente em `ac_keyness()` (o certo é `group`).
+      Achado ao conferir contra o pacote `acR` instalado localmente (Rd db e
+      testthat), não de memória. Recompilado sem erro.
 
 Pendente:
 
@@ -163,15 +170,6 @@ Pendente:
 - [ ] Arquivo com a explicação formal da tarefa da tarde (autor decidiu
       adiar; formato da atividade já está fechado, falta só documentá-lo à
       parte dos slides)
-
-Achado durante a checagem contra o pacote `acR` instalado localmente: os
-blocos "Demo 3" e "Demo 4" de `aula01_manha.tex` (por volta das linhas
-761-793 e 849) chamam `ac_count()`, `ac_keyness()` e `ac_lda()` passando o
-resultado de `ac_tokenize()` onde a assinatura real espera o objeto
-`ac_corpus`, e `ac_keyness()` usa um argumento `ref` que não existe na
-função real (o parâmetro certo é `group`, com `target` apontando para um dos
-dois valores da coluna de grupo). Ainda não corrigido nos slides; ver
-`scripts/06_atividade.R` para o uso correto dessas três funções.
 
 ## Restrição de execução no dia
 
