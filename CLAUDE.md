@@ -40,7 +40,7 @@ Todo slide deve se conectar a isso. O eixo é **validação**, não ferramenta.
 ├── ATIVIDADE_TARDE.md          explicação da tarefa da tarde para os alunos
 ├── LICENSE                     MIT (código) + CC BY 4.0 (slides)
 ├── CITATION.cff
-├── aula01_manha.tex            64 páginas de projeção (~45 slides)
+├── aula01_manha.tex            66 páginas de projeção (~48 slides)
 ├── aula02_tarde.tex            32 páginas: 21 no corpo + 11 no apêndice
 ├── figuras/
 │   ├── fig_*.png               geradas por scripts/05_figuras.R (300 dpi)
@@ -248,6 +248,16 @@ Concluído (adicional):
       o lockfile capture a biblioteca inteira e não repita esse problema.
       `renv.lock` re-gerado (agora com 105 pacotes, antes 65) e
       `scripts/00_setup.R` documenta as duas dependências ocultas.
+- [x] Três lacunas de conteúdo na `aula01_manha.tex`, apontadas pelo autor:
+      (1) novo frame "Onde a manhã começa e onde ela termina", logo após a
+      abertura, reaproveitando o diagrama de seis etapas de
+      `aula02_tarde.tex` para situar o que é conceitual hoje de manhã e o
+      que é prático à tarde; (2) novo frame "LDA ou STM? Depende da sua
+      pergunta", depois do Demo 4, já que LDA e STM apareciam lado a lado
+      em "Fluxo de decisão" e "Mapa conceitual do workshop" sem nunca serem
+      diferenciados; (3) o frame do paradoxo do $\kappa$ foi reformulado
+      para abrir com as quatro ações (título e corpo), não só descrever o
+      problema. 66 páginas agora (era 64), recompilado sem erro.
 
 Pendente:
 
