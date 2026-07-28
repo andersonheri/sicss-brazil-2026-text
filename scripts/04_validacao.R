@@ -110,6 +110,19 @@ set.seed(1234)
 
 # =============================================================================
 # 1. AMOSTRAGEM PARA REVISÃO HUMANA (mecanismo real)
+# -----------------------------------------------------------------------------
+# Depois que a LLM classifica todos os documentos (aqui, já feito por
+# scripts/03_llm.R), você não confere todos de novo à mão: você confere uma
+# AMOSTRA, e usa a concordância nessa amostra como estimativa de confiança
+# para o restante. ac_qual_sample() escolhe essa amostra por você.
+#
+# strategy = "uncertainty" prioriza os documentos em que a própria LLM
+# hesitou mais (menor `confidence_score`, ver scripts/03_llm.R): é aí que
+# provavelmente estão os erros, então é aí que a revisão humana rende mais
+# por documento revisado. As alternativas seriam "stratified" (garante
+# representação proporcional de cada categoria), "random" (amostra
+# aleatória simples) e "disagreement" (prioriza onde as rodadas de
+# self-consistency mais divergiram entre si).
 # =============================================================================
 
 resultado <- readRDS(p_data("resultado_llm_precomputado.rds"))
@@ -118,15 +131,27 @@ amostra <- ac_qual_sample(resultado, n = 150, strategy = "uncertainty")
 cat("\nDistribuicao da amostra por categoria (top da incerteza):\n")
 print(table(amostra$categoria))
 
-# ac_qual_export_for_review(amostra, path, corpus_limpo) e
-# ac_qual_import_human() ficam de fora: exigem, respectivamente, o corpus com
-# o texto original e uma planilha revisada por um humano de verdade.
+# Depois da amostragem, o passo seguinte do pipeline real seria:
+#   ac_qual_export_for_review(amostra, "outputs/revisao.xlsx", corpus_limpo)
+#   humano <- ac_qual_import_human("outputs/revisao_preenchida.xlsx")
+# A primeira gera uma planilha para um humano codificar, SEM mostrar o
+# rótulo que a LLM deu (evita que o humano apenas confirme a LLM por
+# preguiça ou deferência). A segunda lê essa planilha de volta depois de
+# preenchida. Nenhuma das duas roda aqui: a primeira precisa do corpus com o
+# texto original (que este placeholder não tem, só as categorias), e a
+# segunda precisa de uma planilha revisada por um humano de verdade, que
+# ainda não existe neste projeto.
 
 # =============================================================================
 # 2. CONFIABILIDADE: reconstrução da matriz de confusão de fig4_confusao.csv
 # -----------------------------------------------------------------------------
-# Expande a tabela (llm, humano, n) em uma linha por documento, para poder
-# chamar ac_qual_irr()/ac_qual_reliability() de verdade.
+# Para chamar ac_qual_irr()/ac_qual_reliability() de verdade (e não só citar
+# números), precisamos de uma tabela com uma LINHA POR DOCUMENTO (doc_id +
+# categoria do humano + categoria da LLM). O que temos versionado é a
+# matriz já agregada (quantos documentos caíram em cada combinação
+# llm × humano), em figuras/dados/fig4_confusao.csv. tidyr::uncount(n)
+# desfaz essa agregação: repete cada linha da matriz `n` vezes, uma por
+# documento, e cria um doc_id sequencial para cada repetição.
 # =============================================================================
 
 confusao <- read.csv(p_figuras("dados", "fig4_confusao.csv"), stringsAsFactors = FALSE)
@@ -139,7 +164,17 @@ doc_a_doc <- confusao |>
 llm_df    <- doc_a_doc |> select(doc_id, categoria = llm)
 humano_df <- doc_a_doc |> select(doc_id, categoria = humano)
 
-# --- ac_qual_irr(): percent agreement, Cohen's kappa, Krippendorff's alpha ---
+# ac_qual_irr() compara dois codificadores (aqui, humano = "gold"/referência
+# e LLM = "predicted") e devolve três leituras complementares da mesma
+# concordância:
+#   - Percent agreement: fração simples de documentos em que os dois
+#     concordam. Fácil de entender, mas não desconta o acordo que
+#     aconteceria só por acaso.
+#   - Cohen's kappa: corrige o percent agreement pela concordância
+#     esperada ao acaso, dada a distribuição das categorias.
+#   - Krippendorff's alpha: mede a mesma coisa que o kappa, mas com uma
+#     definição mais geral, que também funciona com mais de dois
+#     codificadores e dados faltantes.
 irr <- ac_qual_irr(
   gold      = humano_df,
   predicted = llm_df,
@@ -148,8 +183,17 @@ irr <- ac_qual_irr(
 )
 print(irr)
 
-# --- ac_qual_reliability(): krippendorff, Gwet AC1, F1 macro, percent agreement,
-# com bootstrap (chamada SEPARADA de ac_qual_irr(); ver nota no topo) ---
+# ac_qual_reliability() é uma função SEPARADA (não é o mesmo que rodar
+# ac_qual_irr() de novo): ela soma duas métricas que a primeira não calcula
+#   - Gwet's AC1: alternativa ao kappa mais estável quando uma categoria
+#     domina as demais (o "paradoxo do kappa": com concordância alta mas
+#     categorias desbalanceadas, o kappa pode cair artificialmente).
+#   - F1 macro: média (não ponderada) do F1 de cada categoria. É por isso
+#     que ela pune mais a categoria rara que vai mal (Seção 3) do que uma
+#     métrica agregada simples puniria.
+# e adiciona intervalo de confiança de 95% via bootstrap (reamostragem dos
+# 150 documentos, 1000 vezes, para estimar a variabilidade da estimativa)
+# a TODAS as métricas, inclusive as que ac_qual_irr() já mostrou.
 confiabilidade <- ac_qual_reliability(
   llm     = llm_df,
   human   = humano_df,

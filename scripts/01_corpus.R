@@ -99,6 +99,15 @@ library(acR)
 # (A) Com API real. NÃO RODE isto durante o workshop: precisa de internet,
 # demora (paginação + sleep entre chamadas) e não é reprodutível de um dia
 # para o outro (o acervo de discursos muda). Descomente em casa.
+#
+# ac_fetch_camara() coleta discursos da Câmara dos Deputados em duas etapas
+# internas (lista os deputados que batem com os filtros, depois busca os
+# discursos de cada um): `data_inicio`/`data_fim` delimitam o período;
+# `tipo_discurso = "plenario"` restringe a pronunciamentos do plenário (em
+# vez de comissões); `n_max` limita quantos discursos trazer, para não
+# esperar horas na primeira tentativa. ac_fetch_senado() faz o mesmo para o
+# Senado e devolve as MESMAS colunas, para que dê para juntar os dois com
+# dplyr::bind_rows() e analisar as duas casas legislativas juntas.
 # =============================================================================
 
 # disc_camara <- ac_fetch_camara(
@@ -120,6 +129,13 @@ library(acR)
 # (B) Versão ilustrativa: reaproveita o corpus fictício da atividade, só para
 # demonstrar a etapa. NÃO representa nenhuma coleta real da Câmara ou do
 # Senado.
+#
+# ac_corpus() é a porta de entrada do acR: transforma um data.frame comum
+# (aqui, lido de um CSV) num objeto que as demais funções do pacote sabem
+# processar. `text` aponta a coluna com o texto de cada documento; `docid`,
+# a coluna que identifica cada documento sem repetição; `meta` diz quais
+# colunas extras (aqui, `grupo`) devem ser preservadas como metadado, para
+# usar depois em comparações entre grupos (scripts/02_quantitativo.R).
 bruto  <- read.csv(p_data("corpus_atividade.csv"), stringsAsFactors = FALSE)
 corpus <- ac_corpus(bruto, text = texto, docid = doc_id, meta = grupo)
 

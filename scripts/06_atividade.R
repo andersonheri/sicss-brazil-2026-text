@@ -108,8 +108,20 @@ library(acR)
 # -----------------------------------------------------------------------------
 # Troque este bloco pelo SEU corpus: um data.frame com uma coluna de texto e,
 # se fizer sentido para sua pergunta, uma coluna de grupo (partido, período,
-# fonte, autor...). `ac_corpus()` detecta colunas chamadas text/texto/doc/
-# content/conteudo automaticamente, mas é mais seguro nomear explicitamente.
+# fonte, autor...). Pode vir de um CSV (como aqui), de uma planilha, ou de
+# qualquer fonte que você consiga transformar num data.frame no R.
+#
+# ac_corpus() é a porta de entrada do acR: transforma esse data.frame comum
+# num objeto que todas as demais funções do pacote sabem processar.
+#   - text: qual coluna tem o texto de cada documento.
+#   - docid: qual coluna identifica cada documento de forma única (se você
+#     não tiver uma, ac_corpus() gera IDs sequenciais sozinho).
+#   - meta: quais colunas extras preservar como metadado, para comparar
+#     grupos mais adiante (Seção 3). Se você não tem uma coluna de grupo,
+#     pode simplesmente omitir este argumento.
+# ac_corpus() também detecta colunas chamadas text/texto/doc/content/
+# conteudo automaticamente, mas é mais seguro nomear explicitamente, como
+# fazemos aqui.
 # =============================================================================
 
 bruto <- read.csv(p_data("corpus_atividade.csv"), stringsAsFactors = FALSE)
@@ -120,19 +132,33 @@ corpus
 # =============================================================================
 # 2. LIMPEZA
 # -----------------------------------------------------------------------------
-# `remove_stopwords` aceita um preset (pt, pt-br-extended, pt-legislativo) ou
-# um vetor próprio. `protect` preserva siglas/termos que a limpeza destruiria.
+# ac_clean() normaliza o texto antes de contar palavras: sem isso,
+# maiúsculas, pontuação e variações informais de escrita fariam a mesma
+# palavra ser contada como se fossem termos diferentes.
+#   - remove_stopwords: aceita um preset pronto ("pt", "pt-br-extended",
+#     "pt-legislativo") ou um vetor de palavras seu. Os presets cobrem
+#     artigos, preposições e conjunções; não cobrem jargão específico do seu
+#     tema, por isso existe o próximo parâmetro.
+#   - extra_stopwords: palavras ADICIONAIS ao preset, específicas do seu
+#     corpus (aqui, "bairro" e "município" aparecem demais no corpus de
+#     exemplo sem ajudar a distinguir nada). Troque pelas palavras que
+#     dominam o SEU corpus sem carregar sentido analítico.
+#   - protect: use para siglas ou termos que a limpeza destruiria de outra
+#     forma (ex.: c("PT", "STF")); não usamos aqui porque o corpus de
+#     exemplo não tem siglas, mas o seu pode ter.
+#   - normalize_pt: normaliza português coloquial (ex.: "pra" -> "para"),
+#     útil em fala transcrita.
+#   - min_char: descarta tokens de 1-2 letras, quase sempre resíduo de
+#     pontuação e não palavras de verdade.
+#   - verbose: imprime quantos tokens foram removidos em cada etapa. Releia
+#     alguns documentos limpos depois: se você não reconhece mais do que
+#     eles tratam, a limpeza foi longe demais.
 # =============================================================================
-
-sw <- ac_clean_stopwords(
-  preset = "pt-br-extended",
-  add    = c("bairro", "municipio")   # ajuste para o vocabulario do SEU corpus
-)
 
 corpus_limpo <- ac_clean(
   corpus,
   remove_stopwords = "pt-br-extended",
-  extra_stopwords   = sw,
+  extra_stopwords   = c("bairro", "municipio"),
   normalize_pt      = TRUE,
   min_char          = 3L,
   verbose           = TRUE
@@ -145,27 +171,50 @@ corpus_limpo <- ac_clean(
 # ele chama ac_tokenize() internamente. Isso vale para os três usos abaixo.
 # =============================================================================
 
+# Contagem simples: quantas vezes cada palavra aparece no corpus inteiro.
+# ac_top_terms() corta para as `n` mais frequentes; ac_plot_top_terms() faz
+# o gráfico de barras. É o retrato mais básico do corpus: mostra do que se
+# fala, mas ainda não o que é diferente entre grupos.
 contagem <- ac_count(corpus_limpo)
 ac_top_terms(contagem, n = 15) |> ac_plot_top_terms()
 
-# Por grupo, se houver uma coluna de grupo no seu corpus:
+# A mesma contagem, mas agregada por grupo em vez de por documento
+# (by = "grupo"): o resultado tem uma linha por combinação palavra-grupo.
+# Só funciona se o seu corpus tiver uma coluna de grupo de verdade.
 contagem_grupo <- ac_count(corpus_limpo, by = "grupo")
 ac_top_terms(contagem_grupo, n = 8, by = "grupo")
 
-# TF-IDF: o que é distintivo de cada grupo, não apenas frequente
+# TF-IDF: pondera cada palavra pela frequência inversa entre grupos. Uma
+# palavra que aparece em todos os grupos por igual ganha peso baixo, mesmo
+# sendo frequente; uma palavra concentrada num só grupo ganha peso alto.
+# Destaca vocabulário DISTINTIVO, não apenas frequente.
 tfidf <- ac_tf_idf(contagem_grupo, by = "grupo")
 head(tfidf[order(-tfidf$tf_idf), ], 10)
 
-# Keyness: teste estatístico entre EXATAMENTE dois grupos.
-# group = nome da coluna; target = o valor que vira o grupo-alvo.
-# O outro valor da coluna vira automaticamente o grupo de referência
-# (não existe argumento `ref` nesta função).
+# Keyness: mesma ideia do tf-idf (o que é distintivo de um grupo), mas com
+# um teste estatístico por trás, entre EXATAMENTE dois grupos.
+#   - group: nome da coluna que separa os dois lados.
+#   - target: qual dos dois valores vira o "alvo" da comparação. O OUTRO
+#     valor da coluna vira automaticamente o grupo de referência (não
+#     existe argumento `ref` nesta função: só dá para comparar dois grupos
+#     de cada vez, e o segundo é sempre "o resto").
+# Valores positivos de `keyness` indicam termos mais típicos do alvo;
+# negativos, mais típicos da referência.
 kn <- ac_keyness(contagem_grupo, group = "grupo", target = "situacao")
 ac_plot_keyness(kn)
 
 # =============================================================================
 # 4. TÓPICOS (LDA) — opcional, exige corpus razoavelmente grande
 # -----------------------------------------------------------------------------
+# ac_lda() ajusta um modelo de tópicos: em vez de comparar grupos que você
+# já definiu (Seção 3), ele tenta DESCOBRIR agrupamentos de palavras que
+# tendem a aparecer juntas, sem usar nenhuma coluna de grupo.
+#   - k: quantos tópicos pedir. Escolha do pesquisador, não algo que o
+#     algoritmo determina sozinho (ver "a armadilha do k" no slide da
+#     manhã); teste mais de um valor e leia os termos de cada tópico antes
+#     de se comprometer com um k final.
+#   - seed: fixa a aleatoriedade do ajuste, para poder reproduzir o
+#     resultado depois.
 # ac_lda() também opera sobre o CORPUS, não sobre tokens. Com um corpus
 # pequeno como o de exemplo, os tópicos tendem a ser instáveis; isso é
 # esperado e é, em si, uma lição sobre tamanho mínimo de corpus para LDA.
@@ -180,6 +229,27 @@ ac_plot_keyness(kn)
 # NÃO rode esta seção durante o workshop: exige chave de API (.Renviron) e
 # faz chamadas cobradas por token. Rode em casa, sobre o corpus do seu
 # projeto.
+#
+# ac_qual_codebook() estrutura as categorias que a LLM vai usar para
+# classificar cada documento. Para cada categoria, escreva:
+#   - definition: o que ELA é, numa frase sem circularidade (não escreva
+#     "categoria X é o que é X"; escreva o critério observável).
+#   - examples_pos: um ou dois exemplos REAIS do seu corpus que se encaixam.
+#   - examples_neg: um ou dois exemplos que PARECEM se encaixar mas não se
+#     encaixam, para desambiguar de categorias vizinhas. É a mesma lógica
+#     de um codebook em papel, só que estruturada para a LLM ler.
+#
+# ac_qual_code() classifica cada documento do corpus de acordo com esse
+# codebook, usando o modelo passado em `chat` (um objeto do pacote ellmer).
+#   - k_consistency = 3L: classifica cada documento 3 vezes e usa a
+#     categoria mais votada; a concordância entre as 3 rodadas vira o
+#     confidence_score de cada documento (1,0 = as 3 concordaram). Rodar só
+#     1 vez custa menos, mas não dá nenhum sinal de quão estável é a
+#     resposta do modelo.
+#   - confidence = "total": resume essa concordância numa única coluna
+#     confidence_score por documento.
+# O resultado é um tibble com doc_id, categoria (o rótulo escolhido),
+# confidence_score e confidence_level ("alta"/"media"/"baixa").
 # =============================================================================
 
 # codebook <- ac_qual_codebook(
@@ -213,7 +283,25 @@ ac_plot_keyness(kn)
 # =============================================================================
 # 6. VALIDAÇÃO: amostra para revisão humana e concordância humano-LLM
 # -----------------------------------------------------------------------------
-# Também depende da Seção 5 já ter rodado (variável `resultado`).
+# Também depende da Seção 5 já ter rodado (variável `resultado`). Este é o
+# passo que a tese do workshop inteiro pede: nenhuma classificação
+# automática vale sem checar uma amostra contra um humano.
+#
+# ac_qual_sample(strategy = "uncertainty") escolhe os documentos em que a
+# LLM hesitou mais (confidence_score mais baixo) para você revisar à mão:
+# é aí que os erros tendem a se concentrar, então é aí que a revisão rende
+# mais por documento revisado.
+#
+# ac_qual_export_for_review() gera uma planilha para você (ou outra pessoa)
+# codificar, SEM mostrar o rótulo que a LLM deu, para não influenciar o
+# julgamento humano. Depois de codificada à mão,
+# ac_qual_import_human() lê essa planilha de volta.
+#
+# ac_qual_irr() compara os dois conjuntos de rótulos (humano = "gold",
+# LLM = "predicted") e devolve percent agreement, Cohen's kappa e
+# Krippendorff's alpha. Se quiser também Gwet's AC1 e F1 macro (métricas que
+# ac_qual_irr() NÃO calcula), use a função separada ac_qual_reliability(),
+# como em scripts/04_validacao.R.
 # =============================================================================
 
 # amostra <- ac_qual_sample(resultado, n = 10, strategy = "uncertainty")
@@ -227,6 +315,12 @@ ac_plot_keyness(kn)
 
 # =============================================================================
 # 7. EXPORTAR UMA TABELA (quando quiser salvar algo específico)
+# -----------------------------------------------------------------------------
+# ac_export() salva um data.frame/tibble no formato que a extensão do
+# arquivo indicar: ".csv" para CSV, ".xlsx" para Excel, ".tex" para uma
+# tabela LaTeX pronta para colar num artigo, ".rds" para preservar o objeto
+# R exatamente como está. É o último passo antes de levar um resultado do
+# R para fora dele.
 # =============================================================================
 
 # ac_export(kn, path = p_data("../outputs/keyness_meu_projeto.xlsx"))

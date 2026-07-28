@@ -144,6 +144,26 @@ metas <- tribble(
 
 # =============================================================================
 # 3. CODEBOOK E CLASSIFICAÇÃO
+# -----------------------------------------------------------------------------
+# ac_qual_codebook() estrutura as categorias que a LLM vai usar: para cada
+# uma, uma `definition` (o que É), e idealmente `examples_pos`/
+# `examples_neg` (exemplos do que é e do que parece mas não é, para
+# desambiguar categorias vizinhas). É o mesmo instrumento que você escreveria
+# num codebook de análise de conteúdo em papel, só que estruturado para a
+# LLM ler.
+#
+# ac_qual_code() é quem classifica de fato: aplica o codebook a cada
+# documento do corpus, usando o modelo passado em `chat` (um objeto do
+# pacote ellmer, que sabe conversar com o provedor escolhido).
+#   - k_consistency = 3L: classifica cada documento 3 vezes (com pequena
+#     variação de temperatura) e usa a categoria mais votada. A concordância
+#     entre essas 3 rodadas vira o `confidence_score`: 1,0 significa que as
+#     3 rodadas concordaram; menos que isso, que houve divergência interna
+#     do próprio modelo. Rodar só 1 vez custa menos, mas não dá nenhum sinal
+#     de quão estável é a resposta.
+#   - confidence = "total": resume esse grau de concordância numa única
+#     coluna `confidence_score` por documento (em vez de uma coluna por
+#     variável, útil só em codebooks com múltiplas categorias simultâneas).
 # =============================================================================
 
 # (A) Com o pipeline real, quando houver corpus e chave de API:

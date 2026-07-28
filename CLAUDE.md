@@ -112,7 +112,12 @@ significa vazando à direita. Ambos precisam ser corrigidos, não ignorados.
 - Novos scripts devem reaproveitar o bloco `localizar_raiz()` de `05_figuras.R`.
 - `set.seed(1234)` em tudo que tenha componente aleatório.
 - Chaves de API vivem no `.Renviron`, nunca no código. `.gitignore` já protege.
-- Comentar decisões substantivas, não sintaxe óbvia.
+- Comentar decisões substantivas, não sintaxe óbvia. Para chamadas de função
+  do `acR` (ou de qualquer pacote menos óbvio), isso inclui explicar o que a
+  função faz e por que os parâmetros têm o valor que têm, não só nomear a
+  função. O público do workshop é heterogêneo em R; um comentário como
+  "# Keyness: teste estatístico" não basta se quem lê não sabe o que
+  `ac_keyness()` recebe e devolve.
 - Ambiente confirmado do autor: **R 4.3.2, macOS, aarch64**.
 
 ## Pacote acR
@@ -222,6 +227,27 @@ Concluído (adicional):
       abaixo da tabela também mudou: a fraqueza de "garantista" está na
       **precisão** (0,47), não na revocação como dizia antes (o valor 0,47
       já existia no slide antigo, só com o rótulo trocado).
+- [x] Comentários dos scripts `00` a `06` reescritos para explicar o que
+      cada função faz e por que os parâmetros foram escolhidos (não só
+      nomear a função). Pedido explícito do autor: comentário só com o
+      nome da função não basta para o público heterogêneo em R do
+      workshop.
+- [x] `scripts/06_atividade.R`: removida uma redundância na limpeza
+      (`ac_clean_stopwords(preset = "pt-br-extended", add = ...)` passado
+      via `extra_stopwords`, junto com `remove_stopwords = "pt-br-extended"`
+      já aplicando o mesmo preset). `extra_stopwords` agora leva só as
+      palavras adicionais de verdade.
+- [x] **Achado ao rodar os scripts sob o `renv` recém-ativado:** a
+      biblioteca privada do projeto não tinha `stopwords` (dependência
+      oculta de `ac_clean(remove_stopwords = "pt-br-extended")`) nem
+      `topicmodels` (dependência oculta de `ac_lda()`), porque nenhum
+      script carrega esses pacotes com `library()` ou `::` explícito, e o
+      `renv` (modo `snapshot.type: "implicit"`, o padrão) só captura
+      pacotes referenciados de forma estática. Instalados os dois, e
+      `renv/settings.json` alterado para `snapshot.type: "all"`, para que
+      o lockfile capture a biblioteca inteira e não repita esse problema.
+      `renv.lock` re-gerado (agora com 105 pacotes, antes 65) e
+      `scripts/00_setup.R` documenta as duas dependências ocultas.
 
 Pendente:
 

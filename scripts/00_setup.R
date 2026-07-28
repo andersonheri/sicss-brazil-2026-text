@@ -36,7 +36,14 @@ pacotes_cran <- c(
   "dplyr", "readr", "forcats", "ggplot2", "tibble",
   # Texto (scripts/05_figuras.R, scripts/06_atividade.R)
   "tidytext",
+  # Dependência OCULTA do acR: ac_clean(remove_stopwords = "pt-br-extended")
+  # e outros presets de stopword só funcionam com este pacote instalado.
+  # Não aparece em nenhum library() explícito, por isso é fácil esquecer.
+  "stopwords",
   # Modelagem de tópicos e texto (usados pelo acR por baixo, e no Demo de KWIC)
+  # topicmodels é dependência OCULTA de ac_lda(): a função chama
+  # topicmodels::LDA() internamente, sem que nenhum script precise carregar
+  # o pacote com library().
   "quanteda", "quanteda.textstats", "quanteda.textmodels", "topicmodels",
   # Confiabilidade entre codificadores (scripts/04_validacao.R)
   "irr", "irrCAC",
