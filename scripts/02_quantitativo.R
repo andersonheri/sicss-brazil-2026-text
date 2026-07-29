@@ -24,7 +24,7 @@
 # mostrar a mecânica, não para tirar conclusão substantiva.
 #
 # Saída: outputs/top_termos.csv, outputs/keyness.csv,
-#        outputs/top_termos.png, outputs/keyness.png
+#        outputs/top_termos.png, outputs/keyness.png, outputs/lda.png
 # =============================================================================
 
 # =============================================================================
@@ -236,6 +236,12 @@ print(grafico_keyness)
 lda <- ac_lda(corpus_limpo, k = 2, seed = 1234)
 print(lda)
 
+# ac_plot_lda_topics() mostra, para cada tópico, as `top_n` palavras com
+# maior beta (probabilidade da palavra dentro do tópico) — o mesmo gráfico
+# de barras por painel usado no slide da manhã (fig_lda.png).
+grafico_lda <- ac_plot_lda_topics(lda, top_n = 8)
+print(grafico_lda)
+
 # =============================================================================
 # 6. EXPORTAR TABELAS E GRÁFICOS
 # -----------------------------------------------------------------------------
@@ -256,6 +262,8 @@ ac_export(kn, p_outputs("keyness.csv"))
 ggsave(p_outputs("top_termos.png"), grafico_top_termos,
        width = 7, height = 4.5, dpi = 300, bg = "white")
 ggsave(p_outputs("keyness.png"), grafico_keyness,
+       width = 7, height = 4.5, dpi = 300, bg = "white")
+ggsave(p_outputs("lda.png"), grafico_lda,
        width = 7, height = 4.5, dpi = 300, bg = "white")
 
 message("Concluido. Tabelas e graficos salvos em ", p_outputs())
