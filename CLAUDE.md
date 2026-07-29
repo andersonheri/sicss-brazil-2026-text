@@ -40,7 +40,7 @@ Todo slide deve se conectar a isso. O eixo é **validação**, não ferramenta.
 ├── ATIVIDADE_TARDE.md          explicação da tarefa da tarde para os alunos
 ├── LICENSE                     MIT (código) + CC BY 4.0 (slides)
 ├── CITATION.cff
-├── aula01_manha.tex            66 páginas de projeção (~48 slides)
+├── aula01_manha.tex            70 páginas de projeção (~52 slides)
 ├── aula02_tarde.tex            32 páginas: 21 no corpo + 11 no apêndice
 ├── figuras/
 │   ├── fig_*.png               geradas por scripts/05_figuras.R (300 dpi)
@@ -118,6 +118,12 @@ significa vazando à direita. Ambos precisam ser corrigidos, não ignorados.
   função. O público do workshop é heterogêneo em R; um comentário como
   "# Keyness: teste estatístico" não basta se quem lê não sabe o que
   `ac_keyness()` recebe e devolve.
+- **Locale importa para `05_figuras.R`.** Rodar com `LC_ALL`/`LANG` ausentes
+  (locale `"C"`) faz o `ragg`/`ggplot2` falhar silenciosamente ao desenhar
+  acentos (ex.: "Frequência" vira "Frequ..ncia"), sem erro, só um aviso de
+  "conversion failure" fácil de não notar. Rode com
+  `LANG=pt_BR.UTF-8 LC_ALL=pt_BR.UTF-8 Rscript scripts/05_figuras.R` se o
+  terminal não tiver locale configurado (confira com `Sys.getlocale()`).
 - Ambiente confirmado do autor: **R 4.3.2, macOS, aarch64**.
 
 ## Pacote acR
@@ -130,6 +136,9 @@ Funções usadas nos slides, todas confirmadas na documentação oficial:
 `ac_clean` · `ac_clean_stopwords` · `ac_tokenize` · `ac_count` ·
 `ac_top_terms` · `ac_plot_top_terms` · `ac_tf_idf` · `ac_plot_tf_idf` ·
 `ac_keyness` · `ac_plot_keyness` · `ac_lda` · `ac_plot_lda_topics` ·
+`ac_lda_tune` · `ac_plot_lda_tune` · `ac_wordcloud` ·
+`ac_plot_wordcloud_comparative` · `ac_cluster_documents` ·
+`ac_plot_cluster` ·
 `ac_qual_codebook` · `ac_qual_code` · `ac_qual_sample` ·
 `ac_qual_export_for_review` · `ac_qual_import_human` · `ac_qual_irr` ·
 `ac_qual_reliability` · `ac_qual_report` · `ac_export`
@@ -258,6 +267,41 @@ Concluído (adicional):
       diferenciados; (3) o frame do paradoxo do $\kappa$ foi reformulado
       para abrir com as quatro ações (título e corpo), não só descrever o
       problema. 66 páginas agora (era 64), recompilado sem erro.
+- [x] Gráficos que faltavam em `scripts/02_quantitativo.R`: o script
+      calculava `top_termos` e `kn` mas nunca chamava
+      `ac_plot_top_terms()`/`ac_plot_keyness()`. Adicionados, com
+      impressão e `ggsave()` para `outputs/*.png` (mesmo padrão de
+      `05_figuras.R`). Achado ao gerar: com um corpus de 16 documentos, as
+      duas funções mantêm empates no corte por `n`, e os gráficos saíam
+      ilegíveis (dezenas de barras empatadas); corrigido cortando na mão
+      com `slice_head`/`slice_max`/`slice_min(with_ties = FALSE)` antes de
+      plotar. Adicionado também o gráfico do LDA
+      (`ac_plot_lda_topics()`), que tinha o mesmo problema de estar
+      ausente; seus rótulos vêm com sufixo "___Tópico N" (bug cosmético
+      da própria função do `acR`, não do script) — duas tentativas de
+      corrigir via `scale_y_reordered()`/renomear `levels()` quebraram a
+      ordenação das barras por beta, então a saída ficou sem remendo.
+- [x] `scripts/03_llm.R` agora imprime o objeto `resultado` inteiro (300
+      docs) com um banner, não só a tabela agregada da conferência.
+- [x] Quatro novas figuras reais em `scripts/05_figuras.R` (nuvem de
+      palavras, nuvem comparativa, cluster de documentos e curva de
+      seleção de k via `ac_lda_tune()`), rodando de verdade sobre
+      `data/corpus_atividade.csv` — ao contrário das figuras 1-4, que só
+      leem CSVs agregados. Novas dependências: `ggwordcloud` e `cluster`
+      (`ldatuning` não estava disponível para instalar neste ambiente;
+      `ac_lda_tune()` funciona sem ele, só com perplexidade). Adicionadas
+      quatro frames correspondentes na `aula01_manha.tex`: "Demo 3.
+      Descrever: nuvem de palavras" (e sua versão comparativa), "Como
+      escolher k: existe uma métrica" (depois do Demo 4) e "Descobrir
+      tipos de documento: clustering" (depois de "Como validar um modelo
+      de tópicos"). 70 páginas agora (era 66), recompilado sem erro.
+- [x] **Achado ao gerar as figuras acima:** rodar `05_figuras.R` num
+      terminal sem `LANG`/`LC_ALL` configurados (locale `"C"`) faz
+      `ggplot2`/`ragg` falharem silenciosamente ao desenhar acentos
+      ("Frequência" saía como "Frequ..ncia" nos eixos, sem erro, só um
+      aviso de "conversion failure" fácil de não notar). Regenerado com
+      `LANG=pt_BR.UTF-8 LC_ALL=pt_BR.UTF-8`; as 8 figuras foram conferidas
+      visualmente depois. Documentado na seção R deste arquivo.
 
 Pendente:
 

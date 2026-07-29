@@ -831,6 +831,52 @@ grupo-alvo com a esperada sob o grupo de referência.
 \end{columns}
 \end{frame}
 
+\begin{frame}[fragile]{Demo 3. Descrever: nuvem de palavras}
+\begin{columns}[T]
+\column{0.44\textwidth}
+\begin{lstlisting}
+ac_wordcloud(contagem, max_words = 40)
+\end{lstlisting}
+\vspace{0.15cm}
+\footnotesize A versão de impacto visual da Figura 1 (frequência): mesmo
+dado, tamanho da fonte no lugar do comprimento da barra.
+\vspace{0.15cm}
+\begin{alertblock}{Cuidado}
+\small Tamanho de fonte não é uma escala perceptualmente linear: o olho
+superestima palavras grandes. Para leitura analítica precisa, a barra
+continua sendo mais honesta que a nuvem.
+\end{alertblock}
+\column{0.55\textwidth}
+\centering
+\includegraphics[width=0.85\linewidth]{figuras/fig_wordcloud.png}\\
+\scriptsize \textit{Saída ilustrativa, gerada para fins didáticos.}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Demo 3. Descrever: nuvem comparativa entre grupos}
+\begin{columns}[T]
+\column{0.44\textwidth}
+\begin{lstlisting}
+ac_plot_wordcloud_comparative(
+  corpus_limpo,
+  group     = partido,
+  max_words = 25
+)
+\end{lstlisting}
+\vspace{0.15cm}
+\footnotesize A versão visual da Figura 2 (\emph{keyness}): usa TF-IDF,
+tratando cada grupo como um "documento", para destacar o vocabulário
+distintivo de cada lado, lado a lado.
+\vspace{0.1cm}
+\footnotesize Ganha em leitura rápida, perde em rigor: aqui não há
+valor-p nem intervalo, só o ranking de TF-IDF.
+\column{0.55\textwidth}
+\centering
+\includegraphics[width=\linewidth]{figuras/fig_wordcloud_comparativo.png}\\
+\scriptsize \textit{Saída ilustrativa, gerada para fins didáticos.}
+\end{columns}
+\end{frame}
+
 \begin{frame}{Interpretando a saída: três perguntas obrigatórias}
 Diante de qualquer tabela de frequência ou de \emph{keyness}:
 \vspace{0.3cm}
@@ -895,6 +941,26 @@ cada tópico como distribuição sobre palavras.
 \vspace{0.1cm}
 \footnotesize \textbf{Repare no Tópico 4:} ele capturou vocabulário
 procedimental, não substantivo. Isso é comum e precisa ser reportado.
+\end{frame}
+
+\begin{frame}[fragile]{Como escolher k: existe uma métrica}
+\begin{columns}[T]
+\column{0.44\textwidth}
+\begin{lstlisting}
+tune <- ac_lda_tune(corpus_limpo,
+                    k_range = 2:10)
+ac_plot_lda_tune(tune)
+\end{lstlisting}
+\footnotesize \texttt{ac\_lda\_tune()} testa vários $k$ e calcula a
+\textbf{perplexidade}: quanto menor, melhor o modelo prevê palavras que
+não viu.
+\column{0.55\textwidth}
+\centering
+\includegraphics[width=\linewidth]{figuras/fig_lda_tune.png}\\
+\scriptsize \textit{Saída ilustrativa, gerada para fins didáticos.}
+\end{columns}
+\footnotesize \textbf{Leia o ``cotovelo'', não o mínimo.} Piso, não
+teto: a palavra final ainda depende de ler os tópicos.
 \end{frame}
 
 \begin{frame}{LDA ou STM? Depende da sua pergunta}
@@ -967,6 +1033,26 @@ lendo as dez palavras mais prováveis.
 ruído de vocabulário procedimental.'' Isso é ciência. Apresentar os 20 como se
 todos significassem algo, não é.
 \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Descobrir tipos de documento: clustering}
+\begin{columns}[T]
+\column{0.44\textwidth}
+\begin{lstlisting}
+clust <- ac_cluster_documents(
+              corpus_limpo, k = 2)
+ac_plot_cluster(clust)
+\end{lstlisting}
+\footnotesize \textbf{Diferença para o LDA:} soft (mistura de tópicos)
+vs. \emph{hard} (uma única etiqueta por documento).
+\column{0.55\textwidth}
+\centering
+\includegraphics[width=0.92\linewidth]{figuras/fig_cluster.png}\\
+\scriptsize \textit{Saída ilustrativa, gerada para fins didáticos.}
+\end{columns}
+\footnotesize \textbf{Quando usar:} tipologias latentes, amostra de
+revisão estratificada, ou dendrograma no lugar de tópicos.
+\texttt{hclust} (padrão), \texttt{kmeans} ou \texttt{pam}.
 \end{frame}
 
 % =============================================================================

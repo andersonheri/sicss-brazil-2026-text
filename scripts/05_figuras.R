@@ -14,17 +14,22 @@
 #
 # SOBRE OS DADOS
 # --------------
-# Os CSVs em figuras/dados/ são ILUSTRATIVOS. Reproduzem a forma e a ordem de
-# grandeza de saídas reais do pipeline (acR + quanteda), mas não correspondem a
-# uma análise empírica publicada. Existem para que os slides compilem e para que
-# você teste o ambiente sem chave de API.
-#
-# Cada figura tem dois blocos: (A) o código do pipeline real, comentado, e
+# As figuras 1 a 4 usam os CSVs em figuras/dados/, que são ILUSTRATIVOS:
+# reproduzem a forma e a ordem de grandeza de saídas reais do pipeline
+# (acR + quanteda), mas não correspondem a uma análise empírica publicada.
+# Cada uma tem dois blocos: (A) o código do pipeline real, comentado, e
 # (B) a leitura do CSV ilustrativo. Troque (B) por (A) quando tiver o corpus.
 # A camada ggplot2 não muda.
 #
+# As figuras 5 a 8 (nuvem de palavras, nuvem comparativa, cluster e curva de
+# seleção de k) rodam de verdade sobre data/corpus_atividade.csv, o mesmo
+# corpus fictício (16 falas de um plenário municipal fictício) usado pelos
+# scripts numerados 01 a 06. Também são ilustrativas (o corpus é fictício),
+# mas aqui as funções do acR são chamadas de verdade, não simuladas.
+#
 # Saídas: figuras/fig_top_terms.png, fig_keyness.png, fig_lda.png,
-#         fig_confusao.png, sessionInfo_figuras.txt
+#         fig_confusao.png, fig_wordcloud.png, fig_wordcloud_comparativo.png,
+#         fig_cluster.png, fig_lda_tune.png, sessionInfo_figuras.txt
 # =============================================================================
 
 # =============================================================================
@@ -119,10 +124,18 @@ if (length(faltando) > 0) {
        paste(faltando, collapse = ", "), call. = FALSE)
 }
 
+# As figuras 5 a 8 (nuvem, cluster, seleção de k) precisam do corpus de
+# texto de verdade, não só dos CSVs agregados acima.
+if (!file.exists(file.path(RAIZ, "data", "corpus_atividade.csv"))) {
+  stop("Arquivo ausente: data/corpus_atividade.csv (usado pelas figuras 5 a 8).",
+       call. = FALSE)
+}
+
 # =============================================================================
 # 1. PACOTES
 # =============================================================================
-pacotes <- c("readr", "dplyr", "forcats", "ggplot2", "tidytext")
+pacotes <- c("readr", "dplyr", "forcats", "ggplot2", "tidytext", "acR",
+             "ggwordcloud", "cluster")
 faltam  <- pacotes[!vapply(pacotes, requireNamespace, logical(1),
                            quietly = TRUE)]
 if (length(faltam) > 0) {
@@ -134,6 +147,7 @@ library(readr)
 library(dplyr)
 library(forcats)
 library(ggplot2)
+library(acR)
 
 # =============================================================================
 # 2. REPRODUTIBILIDADE E PARÂMETROS GLOBAIS
@@ -309,9 +323,107 @@ fig4 <- dados_f4 |>
 salvar(fig4, "fig_confusao.png", largura = 4.6, altura = 3.6)
 
 # =============================================================================
-# 7. REGISTRO DO AMBIENTE
+# 7. CORPUS PARA AS FIGURAS 5 A 8 (nuvem, cluster, seleção de k)
+# -----------------------------------------------------------------------------
+# Diferente das figuras 1 a 4 (que só leem CSVs de estatísticas já
+# agregadas), nuvem de palavras e clustering precisam do TEXTO de verdade
+# por documento. Reaproveitamos o mesmo corpus ilustrativo usado pelos
+# scripts numerados (data/corpus_atividade.csv: 16 falas fictícias de um
+# plenário municipal fictício), em vez de inventar um quinto conjunto de
+# dados de exemplo.
+# =============================================================================
+
+p_data_raiz <- function(...) file.path(RAIZ, "data", ...)
+
+bruto_corpus  <- read_csv(p_data_raiz("corpus_atividade.csv"), show_col_types = FALSE)
+corpus_ilust  <- ac_corpus(bruto_corpus, text = texto, docid = doc_id, meta = grupo)
+corpus_limpo_ilust <- ac_clean(
+  corpus_ilust,
+  remove_stopwords = "pt-br-extended",
+  extra_stopwords   = c("bairro", "municipio"),
+  normalize_pt      = TRUE,
+  min_char          = 3L
+)
+
+# =============================================================================
+# 8. FIGURA 5. Nuvem de palavras
+# -----------------------------------------------------------------------------
+# ac_wordcloud() parte de uma tabela de frequência (ac_count()) e desenha
+# cada termo com tamanho proporcional a `n`. É a versão "de impacto visual"
+# da Figura 1 (frequência), útil para abertura de slide ou pôster; para
+# leitura analítica precisa, a tabela/barra da Figura 1 continua sendo mais
+# honesta (tamanho de fonte não é uma escala perceptualmente linear).
+# =============================================================================
+
+contagem_ilust <- ac_count(corpus_limpo_ilust)
+
+fig5 <- ac_wordcloud(contagem_ilust, max_words = 40) +
+  tema_slides()
+
+salvar(fig5, "fig_wordcloud.png", largura = 5.4, altura = 3.6)
+
+# =============================================================================
+# 9. FIGURA 6. Nuvem de palavras comparativa
+# -----------------------------------------------------------------------------
+# ac_plot_wordcloud_comparative() usa TF-IDF (tratando cada grupo como um
+# "documento") para destacar o vocabulário DISTINTIVO de cada grupo, e
+# desenha uma nuvem por grupo lado a lado. É a versão visual da Figura 2
+# (keyness): mesma pergunta ("o que é característico de cada lado"),
+# leitura mais rápida à custa de precisão estatística (aqui não há teste
+# de significância nem intervalo, só o ranking de TF-IDF).
+# =============================================================================
+
+fig6 <- ac_plot_wordcloud_comparative(
+  corpus_limpo_ilust,
+  group     = grupo,
+  max_words = 25,
+  seed      = 1234
+) +
+  tema_slides()
+
+salvar(fig6, "fig_wordcloud_comparativo.png", largura = 6.6, altura = 3.6)
+
+# =============================================================================
+# 10. FIGURA 7. Clustering de documentos
+# -----------------------------------------------------------------------------
+# ac_cluster_documents() dá UMA etiqueta por documento (hard clustering),
+# diferente do LDA (Figura 3), que dá uma MISTURA de tópicos por
+# documento (soft clustering). Serve quando a pergunta é "quantos tipos de
+# documento existem, e quais são" — não "quais temas se misturam em cada
+# documento". method = "hclust" (padrão) permite o dendrograma abaixo, que
+# mostra a própria estrutura de fusão dos grupos, não só o resultado
+# final.
+# =============================================================================
+
+cluster_ilust <- ac_cluster_documents(corpus_limpo_ilust, k = 2, min_docs = 1L)
+
+fig7 <- ac_plot_cluster(cluster_ilust, kind = "dendrogram") +
+  tema_slides(base_size = 9)
+
+salvar(fig7, "fig_cluster.png", largura = 5.4, altura = 3.6)
+
+# =============================================================================
+# 11. FIGURA 8. Curva de seleção de k (LDA)
+# -----------------------------------------------------------------------------
+# ac_lda_tune() ajusta o LDA da Figura 3 para vários valores de k e calcula
+# a perplexidade de cada um (quanto menor, melhor o modelo prevê palavras
+# que não viu). ac_plot_lda_tune() desenha a curva; o "cotovelo" (ponto
+# onde ganhos adicionais de k passam a ser pequenos) é a pista quantitativa
+# para escolher k, complementando a leitura qualitativa dos tópicos (ver
+# "A armadilha do k" nos slides).
+# =============================================================================
+
+tune_ilust <- ac_lda_tune(corpus_limpo_ilust, k_range = 2:6, seed = 1234)
+
+fig8 <- ac_plot_lda_tune(tune_ilust) +
+  tema_slides()
+
+salvar(fig8, "fig_lda_tune.png", largura = 5.4, altura = 3.4)
+
+# =============================================================================
+# 12. REGISTRO DO AMBIENTE
 # -----------------------------------------------------------------------------
 # Sem isto, o script é compartilhável, mas não replicável.
 # =============================================================================
 writeLines(capture.output(sessionInfo()), p_figuras("sessionInfo_figuras.txt"))
-message("Concluido: 4 figuras geradas em ", p_figuras())
+message("Concluido: 8 figuras geradas em ", p_figuras())
