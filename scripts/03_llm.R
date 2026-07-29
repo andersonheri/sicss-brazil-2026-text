@@ -226,6 +226,12 @@ resultado <- metas |>
   select(doc_id, categoria, confidence_score, confidence_level, k_unanime,
          modelo)
 
+# Mesmo banner do slide (aula02_tarde.tex), para conferir visualmente no
+# console que o objeto tem a cara do que ac_qual_code() devolveria de
+# verdade, e não só olhar a tabela agregada da Seção 4.
+cat("\n<resultado_llm>", nrow(resultado), "docs | modelo:", MODELO, "\n")
+print(resultado)
+
 # =============================================================================
 # 4. CONFERÊNCIA (a agregação deve bater com o slide)
 # =============================================================================

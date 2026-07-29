@@ -23,7 +23,8 @@
 # por natureza (ver "A armadilha do k" em aula01_manha.tex): serve para
 # mostrar a mecânica, não para tirar conclusão substantiva.
 #
-# Saída: outputs/top_termos.csv, outputs/keyness.csv
+# Saída: outputs/top_termos.csv, outputs/keyness.csv,
+#        outputs/top_termos.png, outputs/keyness.png
 # =============================================================================
 
 # =============================================================================
@@ -91,6 +92,7 @@ p_data    <- function(...) file.path(RAIZ, "data", ...)
 p_outputs <- function(...) file.path(RAIZ, "outputs", ...)
 
 library(acR)
+library(ggplot2)
 set.seed(1234)
 
 # =============================================================================
@@ -163,6 +165,23 @@ contagem_grupo <- ac_count(corpus_limpo, by = "grupo")
 top_termos <- ac_top_terms(contagem_grupo, n = 10, by = "grupo")
 print(top_termos)
 
+# ac_plot_top_terms() transforma essa tabela num gráfico de barras (um
+# painel por grupo, via `by`). Com um corpus tão pequeno quanto o de
+# exemplo, a maioria das palavras aparece só 1 vez: pedir "top 10" traz
+# TODAS as palavras empatadas no corte (dezenas delas), o que deixa o
+# gráfico ilegível. Por isso, para o gráfico (só para o gráfico; a tabela
+# completa acima continua com os empates, para não esconder informação),
+# cortamos explicitamente nas 6 primeiras linhas de cada grupo, já
+# ordenadas por frequência.
+top_termos_grafico <- top_termos |>
+  dplyr::arrange(grupo, dplyr::desc(n)) |>
+  dplyr::group_by(grupo) |>
+  dplyr::slice_head(n = 6) |>
+  dplyr::ungroup()
+
+grafico_top_termos <- ac_plot_top_terms(top_termos_grafico, by = "grupo")
+print(grafico_top_termos)
+
 tfidf <- ac_tf_idf(contagem_grupo, by = "grupo")
 
 # =============================================================================
@@ -181,6 +200,20 @@ tfidf <- ac_tf_idf(contagem_grupo, by = "grupo")
 
 kn <- ac_keyness(contagem_grupo, group = "grupo", target = "situacao")
 print(kn)
+
+# ac_plot_keyness() faz o gráfico de barras divergente (alvo de um lado,
+# referência do outro). O argumento `n` da própria função mantém empates
+# (mesmo problema da Seção 3): com um vocabulário deste tamanho, dezenas de
+# termos empatam no valor extremo de keyness, e `n` sozinho não corta o
+# gráfico de forma legível. Por isso, cortamos manualmente com
+# with_ties = FALSE: os 8 termos mais característicos de cada lado, sem
+# deixar entrar o resto do empate.
+kn_grafico <- dplyr::bind_rows(
+  dplyr::slice_max(kn, order_by = keyness, n = 8, with_ties = FALSE),
+  dplyr::slice_min(kn, order_by = keyness, n = 8, with_ties = FALSE)
+)
+grafico_keyness <- ac_plot_keyness(kn_grafico)
+print(grafico_keyness)
 
 # =============================================================================
 # 5. TÓPICOS (LDA)
@@ -204,15 +237,25 @@ lda <- ac_lda(corpus_limpo, k = 2, seed = 1234)
 print(lda)
 
 # =============================================================================
-# 6. EXPORTAR TABELAS
+# 6. EXPORTAR TABELAS E GRÁFICOS
 # -----------------------------------------------------------------------------
 # ac_export() salva um data.frame/tibble em disco no formato que a extensão
 # do arquivo indicar (aqui, ".csv"). É o mesmo padrão usado para levar
 # resultados do R para um artigo ou planilha de revisão.
+#
+# ggsave() salva o último gráfico impresso (ou o objeto passado
+# explicitamente) como imagem. Salvar em PNG garante que os gráficos
+# apareçam de verdade, não importa se você rodou o script via Rscript no
+# terminal (que não abre janela de gráfico) ou pelo RStudio.
 # =============================================================================
 
 dir.create(p_outputs(), showWarnings = FALSE, recursive = TRUE)
 ac_export(top_termos, p_outputs("top_termos.csv"))
 ac_export(kn, p_outputs("keyness.csv"))
 
-message("Concluido. Tabelas salvas em ", p_outputs())
+ggsave(p_outputs("top_termos.png"), grafico_top_termos,
+       width = 7, height = 4.5, dpi = 300, bg = "white")
+ggsave(p_outputs("keyness.png"), grafico_keyness,
+       width = 7, height = 4.5, dpi = 300, bg = "white")
+
+message("Concluido. Tabelas e graficos salvos em ", p_outputs())
