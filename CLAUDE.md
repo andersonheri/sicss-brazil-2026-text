@@ -302,6 +302,32 @@ Concluído (adicional):
       aviso de "conversion failure" fácil de não notar). Regenerado com
       `LANG=pt_BR.UTF-8 LC_ALL=pt_BR.UTF-8`; as 8 figuras foram conferidas
       visualmente depois. Documentado na seção R deste arquivo.
+- [x] Auditoria completa de `aula02_tarde.tex` com o mesmo método usado na
+      manhã (toda chamada do `acR` conferida contra `args()` do pacote
+      instalado, não de memória). **Achado real:** o slide A9 ("Relatório
+      reprodutível") chamava `ac_qual_report(resultado, irr = irr, codebook
+      = codebook, path = "...html")`. `ac_qual_report()` não tem parâmetro
+      `irr` nem `...`, então essa chamada geraria erro "unused argument"; o
+      parâmetro certo é `reliability`, que espera a saída de
+      `ac_qual_reliability()` (`confiab` no código do slide, não `irr`).
+      Faltava também `format = "html"`: o padrão da função é `"md"` e ela
+      não infere o formato pela extensão do `path`, então sem o argumento
+      explícito o arquivo `.html` sairia com conteúdo markdown. Corrigido
+      para `ac_qual_report(resultado, codebook = codebook, reliability =
+      confiab, format = "html", path = "outputs/relatorio_metodologico.html")`.
+      Recompilado sem erro (32 páginas, 1 overfull residual de 0,99pt, já
+      documentado). Todos os demais números da aula da tarde (distribuição
+      do LLM no slide 5, `irr`/`reliability` no slide 7, tabela por
+      categoria no slide 8) foram reconferidos contra
+      `data/resultado_llm_precomputado.rds` e `outputs/*.csv` e continuam
+      batendo. `scripts/06_atividade.R` reconferido contra o redesenho da
+      atividade (individual, dupla-codificação interna): consistente, não
+      precisa reproduzir a dupla-codificação em código porque a atividade é
+      manual/em papel por desenho. Os 7 scripts (`00` a `06`, exceto `05`
+      por precaução de não regenerar `figuras/*.png` à toa) rodados do zero
+      com sucesso. Passe visual das 32 páginas do PDF final feito por
+      renderização com `pymupdf` (instalado via `python3 -m pip install
+      pymupdf` nesta sessão), sem achado adicional.
 
 Pendente:
 

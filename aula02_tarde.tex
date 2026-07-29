@@ -841,8 +841,8 @@ construção.
 \begin{lstlisting}
 # Relatorio metodologico automatico: codebook, parametros,
 # metricas, amostra auditada e sessionInfo
-ac_qual_report(resultado, irr = irr, codebook = codebook,
-               path = "outputs/relatorio_metodologico.html")
+ac_qual_report(resultado, codebook = codebook, reliability = confiab,
+               format = "html", path = "outputs/relatorio_metodologico.html")
 
 ac_export(resultado, path = "outputs/classificacao.csv")
 ac_export(irr,       path = "outputs/metricas.tex")   # direto para o artigo
